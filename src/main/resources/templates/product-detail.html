@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="fragments/header :: head"></head>
+<body>
+<div th:replace="fragments/header :: header"></div>
+
+<main class="container py-5">
+    <div id="productDetail" class="row">
+        <!-- Product details will be loaded here by JavaScript -->
+        <div class="col-md-6">
+            <div class="bg-light rounded" style="height: 400px;"></div>
+        </div>
+        <div class="col-md-6">
+            <div class="bg-light mb-2" style="height: 32px; width: 70%;"></div>
+            <div class="bg-light mb-3" style="height: 24px; width: 50%;"></div>
+            <div class="bg-light mb-4" style="height: 28px; width: 30%;"></div>
+            <div class="bg-light mb-4" style="height: 100px;"></div>
+
+            <div class="d-flex align-items-center gap-3 mb-4">
+                <div class="input-group" style="width: 120px;">
+                    <button class="btn btn-outline-secondary" disabled>-</button>
+                    <input type="text" class="form-control text-center" value="1" disabled>
+                    <button class="btn btn-outline-secondary" disabled>+</button>
+                </div>
+                <button class="btn btn-primary" disabled>
+                    <i class="bi bi-cart me-2"></i>Add to Cart
+                </button>
+            </div>
+        </div>
+    </div>
+</main>
+
+<div th:replace="fragments/footer :: footer"></div>
+
+<script th:src="@{/js/products.js}"></script>
+</body>
+</html>

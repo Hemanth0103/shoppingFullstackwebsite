@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shopping Cart - ShopSmart</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+</head>
+<body>
+<nav class="navbar navbar-expand-lg navbar-light bg-light border-bottom">
+    <div class="container">
+        <a class="navbar-brand fw-bold fs-4" href="/">ShopSmart</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav me-auto">
+                <li class="nav-item">
+                    <a class="nav-link" href="/">Home</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/">Products</a>
+                </li>
+            </ul>
+            <div class="d-flex align-items-center">
+                <div class="me-3">
+                    <a href="/login" class="btn btn-outline-primary">Login</a>
+                    <a href="/signup" class="btn btn-primary">Sign Up</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<main class="container py-5">
+    <h1 class="mb-4">Your Shopping Cart</h1>
+
+    <div id="cartContent">
+        <!-- Cart items will be loaded here by JavaScript -->
+        <div class="text-center py-5">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-3">Loading your cart...</p>
+        </div>
+    </div>
+</main>
+
+<footer class="bg-light py-4 mt-5 border-top">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-6">
+                <h5>ShopSmart</h5>
+                <p>Your one-stop shop for all your needs.</p>
+            </div>
+            <div class="col-md-3">
+                <h5>Links</h5>
+                <ul class="list-unstyled">
+                    <li><a href="/">Home</a></li>
+                    <li><a href="/about">About Us</a></li>
+                    <li><a href="/contact">Contact</a></li>
+                </ul>
+            </div>
+            <div class="col-md-3">
+                <h5>Contact</h5>
+                <address>
+                    123 Shopping Street<br>
+                    Retail City, RC 12345<br>
+                    <a href="mailto:info@shopsmart.com">info@shopsmart.com</a>
+                </address>
+            </div>
+        </div>
+        <div class="text-center mt-4">
+            <p class="mb-0">&copy; 2023 ShopSmart. All rights reserved.</p>
+        </div>
+    </div>
+</footer>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        loadCart();
+    });
+
+    function loadCart() {
+        const cartContent = document.getElementById('cartContent');
+        const cart = JSON.parse(localStorage.getItem('cart')) || [];
+
+        if (cart.length === 0) {
+            cartContent.innerHTML = `
+                    <div class="text-center py-5">
+                        <i class="bi bi-cart-x" style="font-size: 4rem;"></i>
+                        <h2 class="mt-3">Your cart is empty</h2>
+                        <p class="text-muted mb-4">Looks like you haven't added anything to your cart yet.</p>
+                        <a href="/" class="btn btn-primary">Continue Shopping</a>
+                    </div>
+                `;
+            return;
+        }
+
+        // Calculate totals
+        let subtotal = 0;
+        cart.forEach(item => {
+            subtotal += item.price * item.quantity;
+        });
+
+        // Determine discount tier and percentage
+        let discountPercentage = 0;
+        let discountTier = "Regular (No discount)";
+
+        if (subtotal >= 5000) {
+            discountPercentage = 0.15;
+            discountTier = "Platinum (15% discount)";
+        } else if (subtotal >= 1000) {
+            discountPercentage = 0.1;
+            discountTier = "Gold (10% discount)";
+        } else if (subtotal >= 500) {
+            discountPercentage = 0.05;
+            discountTier = "Silver (5% discount)";
+        }
+
+        const discount = subtotal * discountPercentage;
+        const total = subtotal - discount;
+
+        // Render cart
+        cartContent.innerHTML = `
+                <div class="row">
+                    <div class="col-lg-8">
+                        <div class="card mb-4">
+                            <div class="card-body">
+                                <div id="cartItems">
+                                    ${cart.map(item => `
+                                        <div class="row mb-4 border-bottom pb-4">
+                                            <div class="col-md-2">
+                                                <img src="${item.image}" class="img-fluid rounded" alt="${item.name}">
+                                            </div>
+                                            <div class="col-md-10">
+                                                <div class="d-flex justify-content-between align-items-center">
+                                                    <div>
+                                                        <h5>${item.name}</h5>
+                                                        <p class="text-muted mb-2">$${item.price.toFixed(2)}</p>
+                                                    </div>
+                                                    <div class="d-flex align-items-center">
+                                                        <button class="btn btn-sm btn-outline-secondary me-2" onclick="updateQuantity(${item.productId}, ${item.quantity - 1})">-</button>
+                                                        <span class="mx-2">${item.quantity}</span>
+                                                        <button class="btn btn-sm btn-outline-secondary ms-2" onclick="updateQuantity(${item.productId}, ${item.quantity + 1})">+</button>
+                                                        <button class="btn btn-sm btn-outline-danger ms-3" onclick="removeItem(${item.productId})">
+                                                            <i class="bi bi-trash"></i>
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                                <div class="d-flex justify-content-between mt-2">
+                                                    <span>Subtotal:</span>
+                                                    <span>$${(item.price * item.quantity).toFixed(2)}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-4">
+                        <div class="card">
+                            <div class="card-body">
+                                <h5 class="card-title mb-4">Order Summary</h5>
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span>Subtotal:</span>
+                                    <span>$${subtotal.toFixed(2)}</span>
+                                </div>
+                                <div class="d-flex justify-content-between mb-2 text-muted">
+                                    <span>Discount (${discountTier}):</span>
+                                    <span>-$${discount.toFixed(2)}</span>
+                                </div>
+                                <hr>
+                                <div class="d-flex justify-content-between mb-4 fw-bold">
+                                    <span>Total:</span>
+                                    <span>$${total.toFixed(2)}</span>
+                                </div>
+                                <div class="d-grid gap-2">
+                                    <a href="/checkout" class="btn btn-primary">Proceed to Checkout</a>
+                                    <a href="/" class="btn btn-outline-secondary">Continue Shopping</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+    }
+
+    function updateQuantity(productId, newQuantity) {
+        let cart = JSON.parse(localStorage.getItem('cart')) || [];
+
+        if (newQuantity <= 0) {
+            removeItem(productId);
+            return;
+        }
+
+        const itemIndex = cart.findIndex(item => item.productId === productId);
+        if (itemIndex !== -1) {
+            cart[itemIndex].quantity = newQuantity;
+            localStorage.setItem('cart', JSON.stringify(cart));
+            loadCart();
+        }
+    }
+
+    function removeItem(productId) {
+        let cart = JSON.parse(localStorage.getItem('cart')) || [];
+        cart = cart.filter(item => item.productId !== productId);
+        localStorage.setItem('cart', JSON.stringify(cart));
+        loadCart();
+    }
+</script>
+</body>
+</html>

@@ -1,0 +1,83 @@
+/* General Styles */
+body {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+main {
+    flex: 1;
+}
+
+/* Product Card Styles */
+.product-card {
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.product-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+
+/* Loading Placeholders */
+.product-loading .bg-light {
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0% {
+        opacity: 0.6;
+    }
+    50% {
+        opacity: 0.3;
+    }
+    100% {
+        opacity: 0.6;
+    }
+}
+
+/* Toast Notifications */
+.toast-container {
+    z-index: 1050;
+}
+
+/* Cart Badge */
+.badge {
+    transition: all 0.2s;
+}
+
+/* Form Styles */
+.form-control:focus {
+    border-color: #4a6cf7;
+    box-shadow: 0 0 0 0.25rem rgba(74, 108, 247, 0.25);
+}
+
+.btn-primary {
+    background-color: #4a6cf7;
+    border-color: #4a6cf7;
+}
+
+.btn-primary:hover, .btn-primary:focus {
+    background-color: #3a5ce5;
+    border-color: #3a5ce5;
+}
+
+.btn-outline-primary {
+    color: #4a6cf7;
+    border-color: #4a6cf7;
+}
+
+.btn-outline-primary:hover {
+    background-color: #4a6cf7;
+    border-color: #4a6cf7;
+}
+
+/* Checkout Page */
+.card {
+    border-radius: 0.5rem;
+}
+
+.card-header {
+    background-color: rgba(0, 0, 0, 0.03);
+}
