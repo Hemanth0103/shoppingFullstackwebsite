@@ -84,7 +84,7 @@ function loadCartContents() {
                 <div class="card-body">
                     <div class="row align-items-center">
                         <div class="col-md-2 col-4 mb-3 mb-md-0">
-                            <img src="${item.product.image || '/images/placeholder.jpg'}" class="img-fluid rounded" alt="${item.product.name}">
+                            <img src="${item.product.image || '/images/SmartPhoneProMax.jpeg'}" class="img-fluid rounded" alt="${item.product.name}">
                         </div>
                         <div class="col-md-4 col-8 mb-3 mb-md-0">
                             <h5 class="card-title">${item.product.name}</h5>
