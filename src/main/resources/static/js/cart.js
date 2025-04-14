@@ -11,73 +11,124 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Load cart contents
 function loadCartContents() {
-    const cart = JSON.parse(localStorage.getItem('cart') || '[]');
-    const emptyCart = document.getElementById('emptyCart');
-    const cartItems = document.getElementById('cartItems');
-    const cartItemsList = document.getElementById('cartItemsList');
+    try {
+        let cart = JSON.parse(localStorage.getItem('cart') || '[]');
+        const emptyCart = document.getElementById('emptyCart');
+        const cartItems = document.getElementById('cartItems');
+        const cartItemsList = document.getElementById('cartItemsList');
 
-    if (cart.length === 0) {
-        emptyCart.style.display = 'block';
-        cartItems.style.display = 'none';
-        return;
-    }
+        if (!emptyCart || !cartItems || !cartItemsList) {
+            console.error('Required cart elements not found');
+            return;
+        }
 
-    emptyCart.style.display = 'none';
-    cartItems.style.display = 'flex';
+        // Ensure cart is an array and has valid items
+        if (!Array.isArray(cart)) {
+            cart = [];
+        }
 
-    // Calculate cart totals
-    const { subtotal, discount, discountTier, total } = calculateCartTotals(cart);
+        // Filter out invalid items and ensure all required fields exist
+        cart = cart.filter(item => 
+            item && 
+            item.product && 
+            typeof item.product === 'object' &&
+            item.product.id && 
+            item.product.name && 
+            typeof item.product.price === 'number' &&
+            typeof item.quantity === 'number' &&
+            item.quantity > 0
+        );
 
-    // Update summary section
-    document.getElementById('cartSubtotal').textContent = `$${subtotal.toFixed(2)}`;
-    document.getElementById('discountTier').textContent = discountTier;
-    document.getElementById('cartDiscount').textContent = `-$${discount.toFixed(2)}`;
-    document.getElementById('cartTotal').textContent = `$${total.toFixed(2)}`;
+        // Save cleaned cart back to localStorage
+        localStorage.setItem('cart', JSON.stringify(cart));
 
-    // Render cart items
-    cartItemsList.innerHTML = '';
-    cart.forEach(item => {
-        const cartItem = document.createElement('div');
-        cartItem.className = 'card mb-3';
+        if (cart.length === 0) {
+            emptyCart.style.display = 'block';
+            cartItems.style.display = 'none';
+            return;
+        }
 
-        cartItem.innerHTML = `
-            <div class="card-body">
-                <div class="row align-items-center">
-                    <div class="col-md-2 col-4 mb-3 mb-md-0">
-                        <img src="${item.product.image || '/images/placeholder.jpg'}" class="img-fluid rounded" alt="${item.product.name}">
-                    </div>
-                    <div class="col-md-4 col-8 mb-3 mb-md-0">
-                        <h5 class="card-title">${item.product.name}</h5>
-                        <p class="card-text text-muted">${item.product.category}</p>
-                    </div>
-                    <div class="col-md-3 col-6">
-                        <div class="input-group">
-                            <button class="btn btn-outline-secondary btn-sm decrease-quantity" data-product-id="${item.product.id}">
-                                <i class="bi bi-dash"></i>
-                            </button>
-                            <input type="text" class="form-control form-control-sm text-center item-quantity" value="${item.quantity}" readonly>
-                            <button class="btn btn-outline-secondary btn-sm increase-quantity" data-product-id="${item.product.id}">
-                                <i class="bi bi-plus"></i>
+        emptyCart.style.display = 'none';
+        cartItems.style.display = 'flex';
+
+        // Calculate cart totals
+        const { subtotal, discount, discountTier, total } = calculateCartTotals(cart);
+
+        // Update summary section
+        const summaryElements = {
+            cartSubtotal: subtotal,
+            discountTier: discountTier,
+            cartDiscount: discount,
+            cartTotal: total
+        };
+
+        Object.entries(summaryElements).forEach(([id, value]) => {
+            const element = document.getElementById(id);
+            if (element) {
+                if (typeof value === 'number') {
+                    element.textContent = id === 'cartDiscount' 
+                        ? `-$${value.toFixed(2)}` 
+                        : `$${value.toFixed(2)}`;
+                } else {
+                    element.textContent = value;
+                }
+            }
+        });
+
+        // Render cart items
+        cartItemsList.innerHTML = '';
+        cart.forEach(item => {
+            const cartItem = document.createElement('div');
+            cartItem.className = 'card mb-3';
+            cartItem.innerHTML = `
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-md-2 col-4 mb-3 mb-md-0">
+                            <img src="${item.product.image || '/images/placeholder.jpg'}" class="img-fluid rounded" alt="${item.product.name}">
+                        </div>
+                        <div class="col-md-4 col-8 mb-3 mb-md-0">
+                            <h5 class="card-title">${item.product.name}</h5>
+                            <p class="card-text text-muted">${item.product.category || ''}</p>
+                            <p class="card-text"><small class="text-muted">Price: $${item.product.price.toFixed(2)}</small></p>
+                        </div>
+                        <div class="col-md-3 col-6">
+                            <div class="input-group">
+                                <button class="btn btn-outline-secondary btn-sm decrease-quantity" data-product-id="${item.product.id}">
+                                    <i class="bi bi-dash"></i>
+                                </button>
+                                <input type="text" class="form-control form-control-sm text-center item-quantity" value="${item.quantity}" readonly>
+                                <button class="btn btn-outline-secondary btn-sm increase-quantity" data-product-id="${item.product.id}">
+                                    <i class="bi bi-plus"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="col-md-2 col-4 text-end">
+                            <span class="fw-bold">$${(item.product.price * item.quantity).toFixed(2)}</span>
+                        </div>
+                        <div class="col-md-1 col-2 text-end">
+                            <button class="btn btn-outline-danger btn-sm remove-item" data-product-id="${item.product.id}">
+                                <i class="bi bi-trash"></i>
                             </button>
                         </div>
                     </div>
-                    <div class="col-md-2 col-4 text-end">
-                        <span class="fw-bold">$${(item.product.price * item.quantity).toFixed(2)}</span>
-                    </div>
-                    <div class="col-md-1 col-2 text-end">
-                        <button class="btn btn-outline-danger btn-sm remove-item" data-product-id="${item.product.id}">
-                            <i class="bi bi-trash"></i>
-                        </button>
-                    </div>
                 </div>
-            </div>
-        `;
+            `;
+            cartItemsList.appendChild(cartItem);
+        });
 
-        cartItemsList.appendChild(cartItem);
-    });
-
-    // Add event listeners to cart item buttons
-    addCartItemEventListeners();
+        // Add event listeners to cart item buttons
+        addCartItemEventListeners();
+    } catch (error) {
+        console.error('Error loading cart:', error);
+        const emptyCart = document.getElementById('emptyCart');
+        const cartItems = document.getElementById('cartItems');
+        if (emptyCart && cartItems) {
+            emptyCart.style.display = 'block';
+            cartItems.style.display = 'none';
+        }
+        // Reset cart on error
+        localStorage.setItem('cart', '[]');
+    }
 }
 
 // Add event listeners to cart item buttons
@@ -149,25 +200,23 @@ function removeCartItem(productId) {
 
 // Calculate cart totals
 function calculateCartTotals(cart) {
-    // Calculate subtotal
-    const subtotal = cart.reduce((sum, item) => sum + (item.product.price * item.quantity), 0);
+    const subtotal = cart.reduce((total, item) => 
+        total + (item.product.price * item.quantity), 0);
 
-    // Determine discount tier and percentage
+    let discountTier = 'No Discount';
     let discountPercentage = 0;
-    let discountTier = "Regular (No discount)";
 
-    if (subtotal >= 5000) {
-        discountPercentage = 0.15;
-        discountTier = "Platinum (15% discount)";
-    } else if (subtotal >= 1000) {
-        discountPercentage = 0.1;
-        discountTier = "Gold (10% discount)";
-    } else if (subtotal >= 500) {
+    if (subtotal >= 200) {
+        discountTier = '20% Off';
+        discountPercentage = 0.20;
+    } else if (subtotal >= 100) {
+        discountTier = '10% Off';
+        discountPercentage = 0.10;
+    } else if (subtotal >= 50) {
+        discountTier = '5% Off';
         discountPercentage = 0.05;
-        discountTier = "Silver (5% discount)";
     }
 
-    // Calculate discount amount and total
     const discount = subtotal * discountPercentage;
     const total = subtotal - discount;
 

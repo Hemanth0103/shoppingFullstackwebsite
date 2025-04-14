@@ -5,8 +5,7 @@ import com.shopsmart.dto.SignupRequest;
 import com.shopsmart.dto.UserResponse;
 import com.shopsmart.model.User;
 import com.shopsmart.repository.UserRepository;
-import com.shopsmart.service.JwtService;
-import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -16,6 +15,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.authentication.WebAuthenticationDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
@@ -23,7 +23,6 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/auth")
-@CrossOrigin(origins = "http://localhost:3000", allowCredentials = "true")
 public class AuthController {
 
     @Autowired
@@ -34,9 +33,6 @@ public class AuthController {
 
     @Autowired
     private PasswordEncoder passwordEncoder;
-
-    @Autowired
-    private JwtService jwtService;
 
     @PostMapping("/signup")
     public ResponseEntity<?> registerUser(@RequestBody SignupRequest signupRequest) {
@@ -64,29 +60,22 @@ public class AuthController {
 
         return ResponseEntity.ok(Map.of("message", "User registered successfully!"));
     }
+
     @PostMapping("/login")
-    public ResponseEntity<?> authenticateUser(@RequestBody LoginRequest loginRequest, HttpServletResponse response) {
+    public ResponseEntity<?> authenticateUser(@RequestBody LoginRequest loginRequest, HttpServletRequest request) {
         try {
-            Authentication authentication = authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(
-                            loginRequest.getEmail(),
-                            loginRequest.getPassword()
-                    )
+            UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
+                    loginRequest.getEmail(),
+                    loginRequest.getPassword()
             );
 
+            authToken.setDetails(new WebAuthenticationDetails(request));
+
+            Authentication authentication = authenticationManager.authenticate(authToken);
             SecurityContextHolder.getContext().setAuthentication(authentication);
 
             User user = userRepository.findByEmail(loginRequest.getEmail())
                     .orElseThrow(() -> new RuntimeException("User not found"));
-
-            String jwt = jwtService.generateToken(user);
-
-            // Set JWT as HTTP-only cookie
-            Cookie cookie = new Cookie("auth_token", jwt);
-            cookie.setHttpOnly(true);
-            cookie.setPath("/");
-            cookie.setMaxAge(24 * 60 * 60); // 1 day
-            response.addCookie(cookie);
 
             return ResponseEntity.ok(new UserResponse(
                     user.getId(),
@@ -101,5 +90,23 @@ public class AuthController {
         }
     }
 
-}
+    @GetMapping("/me")
+    public ResponseEntity<?> getCurrentUser() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null && auth.isAuthenticated() && !auth.getName().equals("anonymousUser")) {
+            try {
+                User user = userRepository.findByEmail(auth.getName())
+                        .orElseThrow(() -> new RuntimeException("User not found"));
 
+                return ResponseEntity.ok(new UserResponse(
+                        user.getId(),
+                        user.getUsername(),
+                        user.getEmail()
+                ));
+            } catch (Exception e) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", "User not found"));
+            }
+        }
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", "Not authenticated"));
+    }
+}

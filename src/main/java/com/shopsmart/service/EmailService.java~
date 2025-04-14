@@ -1,0 +1,62 @@
+package com.shopsmart.service;
+
+import com.shopsmart.model.Order;
+import jakarta.mail.MessagingException;
+import jakarta.mail.internet.MimeMessage;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.MimeMessageHelper;
+import org.springframework.stereotype.Service;
+import org.thymeleaf.TemplateEngine;
+import org.thymeleaf.context.Context;
+
+import java.text.DecimalFormat;
+
+@Service
+public class EmailService {
+
+    @Autowired
+    private JavaMailSender mailSender;
+
+    @Autowired
+    private TemplateEngine templateEngine;
+
+    public void sendOrderConfirmation(String to, Order order) {
+        try {
+            System.out.println("Preparing to send email to: " + to);
+
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+            helper.setTo(to);
+            helper.setSubject("Order Confirmation - ShopSmart #" + order.getId());
+            helper.setFrom("noreply@shopsmart.com");  // Add a from address
+
+            Context context = new Context();
+            context.setVariable("order", order);
+            context.setVariable("items", order.getItems());
+            context.setVariable("shipping", order.getShippingDetails());
+
+            DecimalFormat df = new DecimalFormat("0.00");
+            context.setVariable("subtotal", df.format(order.getSubtotal()));
+            context.setVariable("discount", df.format(order.getDiscount()));
+            context.setVariable("total", df.format(order.getTotal()));
+
+            String emailContent = templateEngine.process("order-confirmation", context);
+            helper.setText(emailContent, true);
+
+            System.out.println("Sending email...");
+            mailSender.send(message);
+            System.out.println("Email sent successfully to: " + to);
+
+        } catch (MessagingException e) {
+            System.err.println("Failed to send order confirmation email: " + e.getMessage());
+            e.printStackTrace();
+            // Don't throw the exception, just log it
+        } catch (Exception e) {
+            System.err.println("Unexpected error in email service: " + e.getMessage());
+            e.printStackTrace();
+            // Don't throw the exception, just log it
+        }
+    }
+}

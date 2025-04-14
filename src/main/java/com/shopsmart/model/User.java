@@ -4,6 +4,9 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+
+import java.util.List;
 
 @Entity
 @Table(name = "users")
@@ -26,6 +29,10 @@ public class User {
     private String password;
 
     private double totalSpent = 0.0;
+
+    @OneToMany(mappedBy = "user")
+    @JsonManagedReference
+    private List<Order> orders;
 
     public String getTier() {
         if (totalSpent >= 5000) return "Platinum (15% discount)";

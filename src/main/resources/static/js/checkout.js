@@ -14,39 +14,81 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Load order summary
 function loadOrderSummary() {
-    const cart = JSON.parse(localStorage.getItem('cart') || '[]');
-    const orderItems = document.getElementById('orderItems');
+    try {
+        let cart = JSON.parse(localStorage.getItem('cart') || '[]');
+        const orderItems = document.getElementById('orderItems');
+        const checkoutForm = document.getElementById('checkoutForm');
 
-    if (cart.length === 0) {
+        if (!orderItems || !checkoutForm) {
+            console.error('Required checkout elements not found');
+            window.location.href = '/cart';
+            return;
+        }
+
+        // Validate cart data
+        if (!Array.isArray(cart)) {
+            cart = [];
+        }
+
+        cart = cart.filter(item => 
+            item && 
+            item.product && 
+            typeof item.product === 'object' &&
+            item.product.id && 
+            item.product.name && 
+            typeof item.product.price === 'number' &&
+            typeof item.quantity === 'number' &&
+            item.quantity > 0
+        );
+
+        if (cart.length === 0) {
+            window.location.href = '/cart';
+            return;
+        }
+
+        // Calculate cart totals
+        const { subtotal, discount, discountTier, total } = calculateCartTotals(cart);
+
+        // Update summary section
+        const summaryElements = {
+            orderSubtotal: subtotal,
+            orderDiscountTier: discountTier,
+            orderDiscount: discount,
+            orderTotal: total
+        };
+
+        Object.entries(summaryElements).forEach(([id, value]) => {
+            const element = document.getElementById(id);
+            if (element) {
+                if (typeof value === 'number') {
+                    element.textContent = id === 'orderDiscount' 
+                        ? `-$${value.toFixed(2)}` 
+                        : `$${value.toFixed(2)}`;
+                } else {
+                    element.textContent = value;
+                }
+            }
+        });
+
+        // Render order items
+        orderItems.innerHTML = '';
+        cart.forEach(item => {
+            const orderItem = document.createElement('div');
+            orderItem.className = 'd-flex justify-content-between align-items-center mb-3';
+            orderItem.innerHTML = `
+                <div>
+                    <span class="fw-medium">${item.product.name}</span>
+                    <span class="text-muted"> × ${item.quantity}</span>
+                    <div class="text-muted small">$${item.product.price.toFixed(2)} each</div>
+                </div>
+                <span class="fw-bold">$${(item.product.price * item.quantity).toFixed(2)}</span>
+            `;
+            orderItems.appendChild(orderItem);
+        });
+    } catch (error) {
+        console.error('Error loading order summary:', error);
         window.location.href = '/cart';
-        return;
     }
-
-    // Calculate cart totals
-    const { subtotal, discount, discountTier, total } = calculateCartTotals(cart);
-
-    // Update summary section
-    document.getElementById('orderSubtotal').textContent = `$${subtotal.toFixed(2)}`;
-    document.getElementById('orderDiscountTier').textContent = discountTier;
-    document.getElementById('orderDiscount').textContent = `-$${discount.toFixed(2)}`;
-    document.getElementById('orderTotal').textContent = `$${total.toFixed(2)}`;
-
-    // Render order items
-    orderItems.innerHTML = '';
-    cart.forEach(item => {
-        const orderItem = document.createElement('div');
-        orderItem.className = 'd-flex justify-content-between mb-2';
-
-        orderItem.innerHTML = `
-            <div>
-                <span class="fw-medium">${item.product.name}</span>
-                <span class="text-muted"> × ${item.quantity}</span>
-            </div>
-            <span>$${(item.product.price * item.quantity).toFixed(2)}</span>
-        `;
-
-        orderItems.appendChild(orderItem);
-    });
 }
 
 // Handle checkout form submission
@@ -180,25 +222,23 @@ function showOrderConfirmation(orderId) {
 
 // Calculate cart totals
 function calculateCartTotals(cart) {
-    // Calculate subtotal
-    const subtotal = cart.reduce((sum, item) => sum + (item.product.price * item.quantity), 0);
+    const subtotal = cart.reduce((total, item) => 
+        total + (item.product.price * item.quantity), 0);
 
-    // Determine discount tier and percentage
+    let discountTier = 'No Discount';
     let discountPercentage = 0;
-    let discountTier = "Regular (No discount)";
 
-    if (subtotal >= 5000) {
-        discountPercentage = 0.15;
-        discountTier = "Platinum (15% discount)";
-    } else if (subtotal >= 1000) {
-        discountPercentage = 0.1;
-        discountTier = "Gold (10% discount)";
-    } else if (subtotal >= 500) {
+    if (subtotal >= 200) {
+        discountTier = '20% Off';
+        discountPercentage = 0.20;
+    } else if (subtotal >= 100) {
+        discountTier = '10% Off';
+        discountPercentage = 0.10;
+    } else if (subtotal >= 50) {
+        discountTier = '5% Off';
         discountPercentage = 0.05;
-        discountTier = "Silver (5% discount)";
     }
 
-    // Calculate discount amount and total
     const discount = subtotal * discountPercentage;
     const total = subtotal - discount;
 

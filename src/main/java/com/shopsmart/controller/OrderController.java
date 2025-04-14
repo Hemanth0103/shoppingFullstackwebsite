@@ -8,9 +8,10 @@ import com.shopsmart.model.User;
 import com.shopsmart.repository.OrderRepository;
 import com.shopsmart.repository.UserRepository;
 import com.shopsmart.service.EmailService;
-import com.shopsmart.service.JwtService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
@@ -19,7 +20,6 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/orders")
-@CrossOrigin(origins = "http://localhost:3000", allowCredentials = "true")
 public class OrderController {
 
     @Autowired
@@ -29,16 +29,17 @@ public class OrderController {
     private UserRepository userRepository;
 
     @Autowired
-    private JwtService jwtService;
-
-    @Autowired
     private EmailService emailService;
 
     @PostMapping
-    public ResponseEntity<?> createOrder(@RequestBody OrderRequest orderRequest, @CookieValue("auth_token") String token) {
+    public ResponseEntity<?> createOrder(@RequestBody OrderRequest orderRequest) {
         try {
-            String email = jwtService.extractUsername(token);
-            User user = userRepository.findByEmail(email)
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            if (auth == null || !auth.isAuthenticated() || auth.getName().equals("anonymousUser")) {
+                return ResponseEntity.status(401).body(Map.of("message", "User not authenticated"));
+            }
+
+            User user = userRepository.findByEmail(auth.getName())
                     .orElseThrow(() -> new RuntimeException("User not found"));
 
             Order order = new Order();
@@ -48,15 +49,14 @@ public class OrderController {
             order.setTotal(orderRequest.getTotal());
             order.setDiscountTier(orderRequest.getDiscountTier());
 
-            ShippingDetails shippingDetails = new ShippingDetails(
-                    orderRequest.getShippingDetails().getFirstName(),
-                    orderRequest.getShippingDetails().getLastName(),
-                    orderRequest.getShippingDetails().getEmail(),
-                    orderRequest.getShippingDetails().getAddress(),
-                    orderRequest.getShippingDetails().getCity(),
-                    orderRequest.getShippingDetails().getPostalCode(),
-                    orderRequest.getShippingDetails().getCountry()
-            );
+            ShippingDetails shippingDetails = new ShippingDetails();
+            shippingDetails.setFirstName(orderRequest.getShippingDetails().getFirstName());
+            shippingDetails.setLastName(orderRequest.getShippingDetails().getLastName());
+            shippingDetails.setEmail(orderRequest.getShippingDetails().getEmail());
+            shippingDetails.setAddress(orderRequest.getShippingDetails().getAddress());
+            shippingDetails.setCity(orderRequest.getShippingDetails().getCity());
+            shippingDetails.setPostalCode(orderRequest.getShippingDetails().getPostalCode());
+            shippingDetails.setCountry(orderRequest.getShippingDetails().getCountry());
             order.setShippingDetails(shippingDetails);
 
             List<OrderItem> items = new ArrayList<>();
@@ -69,17 +69,20 @@ public class OrderController {
                 item.setPrice(itemRequest.getPrice());
                 items.add(item);
             }
-            order.setItems(items);
 
-            // Update user's total spent
+            order.setItems(items);
+            Order savedOrder = orderRepository.save(order);
+
             user.setTotalSpent(user.getTotalSpent() + order.getTotal());
             userRepository.save(user);
 
-            // Save order
-            Order savedOrder = orderRepository.save(order);
-
-            // Send confirmation email
-            emailService.sendOrderConfirmation(user.getEmail(), savedOrder);
+            // Send purchase email without requiring confirmation
+            try {
+                emailService.sendOrderConfirmation(user.getEmail(), savedOrder);
+            } catch (Exception e) {
+                // Just log the error and continue
+                System.err.println("Failed to send email: " + e.getMessage());
+            }
 
             return ResponseEntity.ok(Map.of(
                     "message", "Order created successfully",
@@ -87,15 +90,19 @@ public class OrderController {
             ));
 
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
+            return ResponseEntity.badRequest().body(Map.of("message", "Error creating order: " + e.getMessage()));
         }
     }
 
     @GetMapping
-    public ResponseEntity<?> getUserOrders(@CookieValue("auth_token") String token) {
+    public ResponseEntity<?> getUserOrders() {
         try {
-            String email = jwtService.extractUsername(token);
-            User user = userRepository.findByEmail(email)
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            if (auth == null || !auth.isAuthenticated() || auth.getName().equals("anonymousUser")) {
+                return ResponseEntity.status(401).body(Map.of("message", "User not authenticated"));
+            }
+
+            User user = userRepository.findByEmail(auth.getName())
                     .orElseThrow(() -> new RuntimeException("User not found"));
 
             List<Order> orders = orderRepository.findByUserOrderByOrderDateDesc(user);
