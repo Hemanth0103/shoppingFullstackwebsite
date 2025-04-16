@@ -5,7 +5,10 @@ import com.shopsmart.dto.SignupRequest;
 import com.shopsmart.dto.UserResponse;
 import com.shopsmart.model.User;
 import com.shopsmart.repository.UserRepository;
+<<<<<<< HEAD
 import jakarta.annotation.PostConstruct;
+=======
+>>>>>>> 4b6f15fc09983272ba20d3e0655deb49377a27c5
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,6 +38,7 @@ public class AuthController {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+<<<<<<< HEAD
     @PostConstruct
     public void init() {
         // Create admin user if not exists
@@ -50,6 +54,8 @@ public class AuthController {
         }
     }
 
+=======
+>>>>>>> 4b6f15fc09983272ba20d3e0655deb49377a27c5
     @PostMapping("/signup")
     public ResponseEntity<?> registerUser(@RequestBody SignupRequest signupRequest) {
         // Check if username is already taken
@@ -71,8 +77,11 @@ public class AuthController {
         user.setUsername(signupRequest.getUsername());
         user.setEmail(signupRequest.getEmail());
         user.setPassword(passwordEncoder.encode(signupRequest.getPassword()));
+<<<<<<< HEAD
         user.setGender(signupRequest.getGender());
         user.setAge(signupRequest.getAge());
+=======
+>>>>>>> 4b6f15fc09983272ba20d3e0655deb49377a27c5
 
         userRepository.save(user);
 

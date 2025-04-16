@@ -24,7 +24,11 @@ public class Order {
     private Long id;
 
     @ManyToOne
+<<<<<<< HEAD
     @JoinColumn(name = "user_id")
+=======
+    @JoinColumn(name = "user_id", nullable = false)
+>>>>>>> 4b6f15fc09983272ba20d3e0655deb49377a27c5
     @JsonBackReference
     private User user;
 
@@ -32,6 +36,7 @@ public class Order {
     @JsonManagedReference
     private List<OrderItem> items = new ArrayList<>();
 
+<<<<<<< HEAD
     @Column(nullable = false)
     private Double subtotal = 0.0;
 
@@ -41,6 +46,11 @@ public class Order {
     @Column(nullable = false)
     private Double total = 0.0;
 
+=======
+    private double subtotal;
+    private double discount;
+    private double total;
+>>>>>>> 4b6f15fc09983272ba20d3e0655deb49377a27c5
     private String discountTier;
 
     @Column(nullable = false)
@@ -48,6 +58,7 @@ public class Order {
 
     @Embedded
     private ShippingDetails shippingDetails;
+<<<<<<< HEAD
 
     // Helper method to calculate total
     @PrePersist
@@ -58,4 +69,6 @@ public class Order {
         total = subtotal - discount;
         if (total < 0) total = 0.0;
     }
+=======
+>>>>>>> 4b6f15fc09983272ba20d3e0655deb49377a27c5
 }

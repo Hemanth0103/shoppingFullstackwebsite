@@ -4,6 +4,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+<<<<<<< HEAD
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -23,6 +24,17 @@ import java.io.IOException;
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
+=======
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+
+@Configuration
+@EnableWebSecurity
+>>>>>>> 4b6f15fc09983272ba20d3e0655deb49377a27c5
 public class SecurityConfig {
 
     @Bean
@@ -33,14 +45,21 @@ public class SecurityConfig {
                         .requestMatchers("/", "/login", "/signup", "/product-detail", "/cart",
                                 "/js/**", "/css/**", "/images/**", "/webjars/**", "/api/products/**").permitAll()
                         .requestMatchers("/api/auth/**").permitAll()
+<<<<<<< HEAD
                         .requestMatchers("/admin/**").hasRole("ADMIN")
+=======
+>>>>>>> 4b6f15fc09983272ba20d3e0655deb49377a27c5
                         .requestMatchers("/checkout", "/orders", "/api/orders/**").authenticated()
                         .anyRequest().permitAll()
                 )
                 .formLogin(form -> form
                         .loginPage("/login")
                         .loginProcessingUrl("/login")
+<<<<<<< HEAD
                         .successHandler(authenticationSuccessHandler())
+=======
+                        .defaultSuccessUrl("/", true)
+>>>>>>> 4b6f15fc09983272ba20d3e0655deb49377a27c5
                         .permitAll()
                 )
                 .logout(logout -> logout
@@ -59,6 +78,7 @@ public class SecurityConfig {
     }
 
     @Bean
+<<<<<<< HEAD
     public AuthenticationSuccessHandler authenticationSuccessHandler() {
         return new AuthenticationSuccessHandler() {
             @Override
@@ -78,6 +98,8 @@ public class SecurityConfig {
     }
 
     @Bean
+=======
+>>>>>>> 4b6f15fc09983272ba20d3e0655deb49377a27c5
     public AuthenticationManager authenticationManager(AuthenticationConfiguration authConfig) throws Exception {
         return authConfig.getAuthenticationManager();
     }

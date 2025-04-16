@@ -28,6 +28,7 @@ public class User {
     @Column(nullable = false)
     private String password;
 
+<<<<<<< HEAD
     @Column(nullable = false)
     private String gender;
 
@@ -37,6 +38,8 @@ public class User {
     @Column(nullable = false)
     private String role = "USER"; // Default role
 
+=======
+>>>>>>> 4b6f15fc09983272ba20d3e0655deb49377a27c5
     private double totalSpent = 0.0;
 
     @OneToMany(mappedBy = "user")

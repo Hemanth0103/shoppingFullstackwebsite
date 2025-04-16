@@ -17,6 +17,7 @@
 		<java.version>17</java.version>
 	</properties>
 	<dependencies>
+<<<<<<< HEAD
 
 		<dependency>
 			<groupId>jakarta.annotation</groupId>
@@ -24,6 +25,8 @@
 			<version>2.1.1</version>
 		</dependency>
 
+=======
+>>>>>>> 4b6f15fc09983272ba20d3e0655deb49377a27c5
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-data-jpa</artifactId>
@@ -45,11 +48,14 @@
 			<artifactId>spring-boot-starter-thymeleaf</artifactId>
 		</dependency>
 		<dependency>
+<<<<<<< HEAD
 			<groupId>nz.net.ultraq.thymeleaf</groupId>
 			<artifactId>thymeleaf-layout-dialect</artifactId>
 			<version>3.2.1</version>
 		</dependency>
 		<dependency>
+=======
+>>>>>>> 4b6f15fc09983272ba20d3e0655deb49377a27c5
 			<groupId>mysql</groupId>
 			<artifactId>mysql-connector-java</artifactId>
 			<version>8.0.33</version>
