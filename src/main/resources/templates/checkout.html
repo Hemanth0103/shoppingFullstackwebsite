@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checkout - ShopSmart</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+<nav class="navbar navbar-expand-lg navbar-light bg-light border-bottom">
+    <div class="container">
+        <a class="navbar-brand fw-bold fs-4" href="/">ShopSmart</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav me-auto">
+                <li class="nav-item">
+                    <a class="nav-link" href="/">Home</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/">Products</a>
+                </li>
+            </ul>
+            <div class="d-flex align-items-center">
+                <div th:if="${authenticated}" class="me-3">
+                    <span th:text="${'Hello, ' + username}"></span>
+                    <a href="/logout" class="btn btn-outline-danger ms-2">Logout</a>
+                    <a href="/orders" class="btn btn-outline-primary ms-2">My Orders</a>
+                </div>
+                <div th:unless="${authenticated}" class="me-3">
+                    <a href="/login" class="btn btn-outline-primary">Login</a>
+                    <a href="/signup" class="btn btn-primary">Sign Up</a>
+                </div>
+                <a href="/cart" class="position-relative me-2">
+                    <button class="btn btn-outline-secondary">
+                        <i class="bi bi-cart"></i>
+                        <span id="cartCount" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-primary">
+                                0
+                            </span>
+                    </button>
+                </a>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<main class="container py-5">
+    <h1 class="mb-4">Checkout</h1>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title mb-4">Contact Information</h5>
+                    <form id="checkoutForm">
+                        <div class="mb-3">
+                            <label for="email" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="email" name="email" th:value="${username}" required>
+                        </div>
+
+                        <h5 class="mt-4 mb-3">Shipping Address</h5>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="firstName" class="form-label">First Name</label>
+                                <input type="text" class="form-control" id="firstName" name="firstName" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="lastName" class="form-label">Last Name</label>
+                                <input type="text" class="form-control" id="lastName" name="lastName" required>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="address" class="form-label">Address</label>
+                            <input type="text" class="form-control" id="address" name="address" required>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="city" class="form-label">City</label>
+                                <input type="text" class="form-control" id="city" name="city" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="postalCode" class="form-label">Postal Code</label>
+                                <input type="text" class="form-control" id="postalCode" name="postalCode" required>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="country" class="form-label">Country</label>
+                            <input type="text" class="form-control" id="country" name="country" required>
+                        </div>
+
+                        <h5 class="mt-4 mb-3">Payment Information</h5>
+                        <div class="mb-3">
+                            <label for="cardNumber" class="form-label">Card Number</label>
+                            <input type="text" class="form-control" id="cardNumber" name="cardNumber" placeholder="1234 5678 9012 3456" required>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="expiryDate" class="form-label">Expiry Date</label>
+                                <input type="text" class="form-control" id="expiryDate" name="expiryDate" placeholder="MM/YY" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="cvv" class="form-label">CVV</label>
+                                <input type="text" class="form-control" id="cvv" name="cvv" placeholder="123" required>
+                            </div>
+                        </div>
+
+                        <div class="d-grid mt-4">
+                            <button type="submit" class="btn btn-primary" id="placeOrderBtn">Place Order</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title mb-4">Order Summary</h5>
+                    <div id="orderSummary">
+                        <div class="text-center py-3">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<footer class="bg-light py-4 mt-5 border-top">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-6">
+                <h5>ShopSmart</h5>
+                <p>Your one-stop shop for all your needs.</p>
+            </div>
+            <div class="col-md-3">
+                <h5>Links</h5>
+                <ul class="list-unstyled">
+                    <li><a href="/">Home</a></li>
+                    <li><a href="/about">About Us</a></li>
+                    <li><a href="/contact">Contact</a></li>
+                </ul>
+            </div>
+            <div class="col-md-3">
+                <h5>Contact</h5>
+                <address>
+                    123 Shopping Street<br>
+                    Retail City, RC 12345<br>
+                    <a href="mailto:info@shopsmart.com">info@shopsmart.com</a>
+                </address>
+            </div>
+        </div>
+        <div class="text-center mt-4">
+            <p class="mb-0">&copy; 2023 ShopSmart. All rights reserved.</p>
+        </div>
+    </div>
+</footer>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Check if cart is empty
+        const cart = JSON.parse(localStorage.getItem('cart')) || [];
+        if (cart.length === 0) {
+            window.location.href = '/cart';
+            return;
+        }
+
+        loadOrderSummary();
+        updateCartCount();
+
+        document.getElementById('checkoutForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            placeOrder();
+        });
+    });
+
+    function updateCartCount() {
+        const cart = JSON.parse(localStorage.getItem('cart')) || [];
+        const count = cart.reduce((total, item) => total + item.quantity, 0);
+        document.getElementById('cartCount').textContent = count;
+    }
+
+    function loadOrderSummary() {
+        const orderSummary = document.getElementById('orderSummary');
+        const cart = JSON.parse(localStorage.getItem('cart')) || [];
+
+        if (cart.length === 0) {
+            orderSummary.innerHTML = '<p class="text-center">Your cart is empty</p>';
+            return;
+        }
+
+        // Calculate totals
+        let subtotal = 0;
+        cart.forEach(item => {
+            subtotal += item.price * item.quantity;
+        });
+
+        // Determine discount tier and percentage
+        let discountPercentage = 0;
+        let discountTier = "Regular (No discount)";
+
+        if (subtotal >= 5000) {
+            discountPercentage = 0.15;
+            discountTier = "Platinum (15% discount)";
+        } else if (subtotal >= 1000) {
+            discountPercentage = 0.1;
+            discountTier = "Gold (10% discount)";
+        } else if (subtotal >= 500) {
+            discountPercentage = 0.05;
+            discountTier = "Silver (5% discount)";
+        }
+
+        const discount = subtotal * discountPercentage;
+        const total = subtotal - discount;
+
+        // Render order summary
+        let html = '<div class="mb-3" style="max-height: 300px; overflow-y: auto;">';
+
+        cart.forEach(item => {
+            html += `
+                <div class="d-flex justify-content-between mb-2">
+                    <div>
+                        <span class="fw-medium">${item.name}</span>
+                        <span class="text-muted"> × ${item.quantity}</span>
+                    </div>
+                    <span>$${(item.price * item.quantity).toFixed(2)}</span>
+                </div>
+            `;
+        });
+
+        html += `
+            </div>
+            <hr>
+            <div class="d-flex justify-content-between mb-2">
+                <span>Subtotal:</span>
+                <span>$${subtotal.toFixed(2)}</span>
+            </div>
+            <div class="d-flex justify-content-between mb-2 text-muted">
+                <span>Discount (${discountTier}):</span>
+                <span>-$${discount.toFixed(2)}</span>
+            </div>
+            <div class="d-flex justify-content-between fw-bold">
+                <span>Total:</span>
+                <span>$${total.toFixed(2)}</span>
+            </div>
+        `;
+
+        orderSummary.innerHTML = html;
+    }
+
+    function placeOrder() {
+        const cart = JSON.parse(localStorage.getItem('cart')) || [];
+
+        if (cart.length === 0) {
+            alert('Your cart is empty');
+            return;
+        }
+
+        // Disable the button to prevent multiple submissions
+        const placeOrderBtn = document.getElementById('placeOrderBtn');
+        placeOrderBtn. Disabled = true;
+        placeOrderBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processing...';
+
+        // Calculate totals
+        let subtotal = 0;
+        cart.forEach(item => {
+            subtotal += item.price * item.quantity;
+        });
+
+        // Determine discount tier and percentage
+        let discountPercentage = 0;
+        let discountTier = "Regular (No discount)";
+
+        if (subtotal >= 5000) {
+            discountPercentage = 0.15;
+            discountTier = "Platinum (15% discount)";
+        } else if (subtotal >= 1000) {
+            discountPercentage = 0.1;
+            discountTier = "Gold (10% discount)";
+        } else if (subtotal >= 500) {
+            discountPercentage = 0.05;
+            discountTier = "Silver (5% discount)";
+        }
+
+        const discount = subtotal * discountPercentage;
+        const total = subtotal - discount;
+
+        // Get form data
+        const form = document.getElementById('checkoutForm');
+
+        // Create order object
+        const order = {
+            items: cart.map(item => ({
+                productId: item.id,
+                productName: item.name,
+                quantity: item.quantity,
+                price: item.price
+            })),
+            subtotal: subtotal,
+            discount: discount,
+            total: total,
+            discountTier: discountTier,
+            shippingDetails: {
+                firstName: form.firstName.value,
+                lastName: form.lastName.value,
+                email: form.email.value,
+                address: form.address.value,
+                city: form.city.value,
+                postalCode: form.postalCode.value,
+                country: form.country.value
+            }
+        };
+
+        console.log("Sending order:", order);
+
+        // Send order to server
+        fetch('/api/orders', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(order),
+            credentials: 'include'
+        })
+        .then(response => {
+            console.log("Response status:", response.status);
+            if (!response.ok) {
+                return response.json().then(data => {
+                    throw new Error(data.message || 'Failed to place order');
+                });
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log("Order success:", data);
+            // Clear cart and redirect to confirmation page
+            localStorage.removeItem('cart');
+            alert('Order placed successfully! A confirmation email has been sent to your email address.');
+            window.location.href = '/orders';
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('There was a problem processing your order: ' + error. Message);
+            placeOrderBtn. Disabled = false;
+            placeOrderBtn.textContent = 'Place Order';
+        });
+    }
+</script>
+</body>
+</html>
